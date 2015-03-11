@@ -23,7 +23,9 @@ class pHParams(object):
             self.calibs = self.read_calibs()
         else:
             self.calibs = calibs
-        self.slope, self.intercept = self.calc_ph_slope()
+        self.vref = 5.75
+        self.opampGain = 5.25
+        self.slope = self.calc_ph_slope()
 
 
     def set_calib(self, phVal, reading):
@@ -82,13 +84,17 @@ class pHParams(object):
         jf.close()
 
 
-    def calc_ph_slope(self):
-        """Based on the calibration readings, a line of best fit is calulated.
-        This line will be used to calculate the pH step i.e. millivolts to
-        pH value.
-        """
-        x = [int(x) for x in self.calibs.keys()]
-        y = self.calibs.values()
-        # slope, intercept, r_value, p_value, std_err = scipy.linregress(x, y)
-        return scipy.linregress(x, y)[0], scipy.linregress(x, y)[1]
+    ## def calc_ph_slope(self):
+    ##     """Based on the calibration readings, a line of best fit is calulated.
+    ##     This line will be used to calculate the pH step i.e. millivolts to
+    ##     pH value.
+    ##     """
+    ##     x = [int(x) for x in self.calibs.keys()]
+    ##     y = self.calibs.values()
+    ##     # slope, intercept, r_value, p_value, std_err = scipy.linregress(x, y)
+    ##     return scipy.linregress(x, y)[0], scipy.linregress(x, y)[1]
 
+    def calc_ph_slope(self):
+        calib_diff = self.get_calib(7) - self.get_calib(4)
+        return ((((self.vref * calib_diff) / 4096) * 1000) / self.opampGain) \
+                / (7 - 4)

@@ -31,7 +31,7 @@ class pHReader(object):
 
         :return : Integer between 0 and 4096 (2^12).
         """
-        return self.i2c.readU16(0x00)
+        return self.i2c.readU8(0x00)*256 + self.i2c.readU8(0x01)
 
 
     def calc_ph(self, reading):
@@ -40,8 +40,12 @@ class pHReader(object):
         :param reading: Raw 12-bit reading from MinipH
         :return : Integer. 0.0 <= return <= 14.0
         """
-        reading = reading - self.params.interceptcept
-        return round(reading / self.params.slope, 2)
+        ## reading = reading - self.params.interceptcept
+        ## return round(reading / self.params.slope, 2)
+        miliVolts = ((reading / 4096) * self.params.vref) * 1000
+        temp = ((((self.params.vref * self.params.get_calib(7)) / 4096) \
+                * 1000) - reading) / self.params.opampGain
+        return 7 - (temp / self.params.slope)
 
 
 def main():
